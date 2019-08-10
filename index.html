@@ -1,0 +1,48 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<title>drawline-VR for Oculus Quest</title>
+<script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
+<script>'use strict'
+const list = []
+let line = []
+let bkp = null
+AFRAME.registerComponent('input-listen', {
+	init: function() {
+		this.el.addEventListener('triggerdown', function(evt) {
+			bkp = handright.getAttribute('position').clone()
+			list.push(line)
+		})
+		this.el.addEventListener('triggerup', function(evt) {
+			line = []
+			bkp = null
+		})
+		const removeLine = function() {
+			const line = list.pop()
+			if (line)
+				for (let i = 0; i < line.length; i++)
+					document.querySelector('a-scene').removeChild(line[i])
+			return line
+		}
+		this.el.addEventListener('gripdown', function(evt) {
+			removeLine()
+			line = []
+			bkp = null
+		})
+		this.el.addEventListener('bbuttondown', function(evt) {
+			while (removeLine());
+		})
+	},
+	tick: function() {
+		if (bkp) {
+			const p = handright.getAttribute('position').clone()
+			const aline = document.createElement('a-entity')
+			aline.setAttribute('line', { start: bkp, end: p, color: "#FFF" })
+			document.querySelector('a-scene').appendChild(aline)
+			line.push(aline)
+			bkp = p
+		}
+	}
+})
+</script></head><body><a-scene>
+	<a-sky color="#546c4c"></a-sky>
+	<a-entity id='handright' oculus-touch-controls='hand: right' input-listen></a-entity>
+</a-scene></body></html>
