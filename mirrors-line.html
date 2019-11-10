@@ -1,0 +1,98 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<title>drawline-VR for Oculus Quest</title>
+<script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
+<script>'use strict'
+const list = []
+const nmirror = 5
+
+AFRAME.registerComponent('input-listen', {
+	init: function() {
+		const scene = document.querySelector('a-scene')
+		
+		const penlen = .07
+		const penoff = .04
+		const penth = 225 / 180 * Math.PI
+		const y1 = Math.sin(penth) * penoff
+		const z1 = Math.cos(penth) * penoff
+		const y2 = Math.sin(penth) * (penoff + penlen)
+		const z2 = Math.cos(penth) * (penoff + penlen)
+		const pen = document.createElement('a-entity')
+		this.pen_end = new THREE.Vector3(0, y2, z2)
+		pen.setAttribute('line', { start: { x: 0, y: y1, z: z1 }, end: this.pen_end, color: 'white' })
+		this.el.appendChild(pen)
+
+		this.line = null
+		this.id = null
+		this.bkp = []
+		this.color = null
+		const self = this
+
+		this.el.addEventListener('triggerdown', function(evt) {
+			if (!self.line) {
+				self.line = []
+				for (let i = 0; i < nmirror; i++) {
+					const l = document.createElement('a-entity')
+					self.line[i] = l
+					scene.appendChild(l)
+				}
+				list.push(self.line)
+				
+				const p = this.object3D.localToWorld(self.pen_end.clone())
+				//const p = this.object3D.getWorldPosition()
+				self.id = 0
+				const ath = Math.atan2(p.z, p.x)
+				const len = Math.sqrt(p.x * p.x + p.z * p.z)
+				for (let i = 0; i < nmirror; i++) {
+					const th = ath + Math.PI * 2 / nmirror * i
+					const x = Math.cos(th) * len
+					const z = Math.sin(th) * len
+					self.bkp[i] = new THREE.Vector3(x, p.y, z)
+				}
+				self.color = 'hsl(' + (Math.random() * 360) + ',90%,90%)'
+				// '#F00'
+			}
+		})
+		this.el.addEventListener('triggerup', function(evt) {
+			self.line = null
+		})
+		const removeLine = function() {
+			const line = list.pop()
+			if (line) {
+				for (const l of line)
+					scene.removeChild(l)
+			}
+			return line
+		}
+		this.el.addEventListener('gripdown', function(evt) {
+			removeLine()
+			self.line = null
+		})
+		this.el.addEventListener('bbuttondown', function(evt) {
+			while (removeLine());
+		})
+	},
+	tick: function() {
+		if (this.line) {
+			const p = this.el.object3D.localToWorld(this.pen_end.clone())
+			//const p = this.el.object3D.getWorldPosition()
+
+			this.id++
+			const ath = Math.atan2(p.z, p.x)
+			const len = Math.sqrt(p.x * p.x + p.z * p.z)
+			for (let i = 0; i < nmirror; i++) {
+				const th = ath + Math.PI * 2 / nmirror * i
+				const x = Math.cos(th) * len
+				const z = Math.sin(th) * len
+				const pnt = new THREE.Vector3(x, p.y, z)
+				this.line[i].setAttribute('line__' + this.id, { start: pnt, end: this.bkp[i], color: this.color })
+				this.bkp[i] = pnt
+			}
+		}
+	}
+})
+</script></head><body><a-scene>
+	<a-sky color="#222"></a-sky>
+	<a-entity oculus-touch-controls='hand: right' input-listen></a-entity>
+	<a-entity oculus-touch-controls='hand: left' input-listen></a-entity>
+</a-scene>
+</body></html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"/>
+<title>drawline-VR for Oculus Quest</title>
+<script src="https://aframe.io/releases/0.9.2/aframe.min.js"></script>
+<script src="https://rawgit.com/andreasplesch/aframe-meshline-component/master/dist/aframe-meshline-component.min.js"></script>
+<script>'use strict'
+const list = []
+AFRAME.registerComponent('input-listen', {
+	init: function() {
+		const scene = document.querySelector('a-scene')
+		
+	/*	
+		const train = document.createElement('a-sphere')
+		train.setAttribute('position', '0 0 -5')
+		train.setAttribute('radius', '.3')
+		train.setAttribute('color', "blue")
+		//scene.appendChild(train)
+		this.el.appendChild(train)
+*/
+		const penlen = .07
+		const penoff = .04
+		const penth = 225 / 180 * Math.PI
+		const y1 = Math.sin(penth) * penoff
+		const z1 = Math.cos(penth) * penoff
+		const y2 = Math.sin(penth) * (penoff + penlen)
+		const z2 = Math.cos(penth) * (penoff + penlen)
+		const pen = document.createElement('a-entity')
+		this.pen_end = new THREE.Vector3(0, y2, z2)
+		pen.setAttribute('line', { start: { x: 0, y: y1, z: z1 }, end: this.pen_end, color: 'white' })
+		this.el.appendChild(pen)
+
+		this.line = null
+		this.path = null
+		const self = this
+
+		this.el.addEventListener('triggerdown', function(evt) {
+			if (!self.line) {
+				self.line = document.createElement('a-entity')
+				scene.appendChild(self.line)
+				list.push(self.line)
+
+				const p = this.object3D.localToWorld(self.pen_end.clone())
+				//const p = this.object3D.getWorldPosition()
+				self.path = p.x + " " + p.y + " " + p.z
+			}
+		})
+		this.el.addEventListener('triggerup', function(evt) {
+			self.line = null
+		})
+		const removeLine = function() {
+			const line = list.pop()
+			if (line)
+				scene.removeChild(line)
+			return line
+		}
+		this.el.addEventListener('gripdown', function(evt) {
+			removeLine()
+			self.line = null
+		})
+		this.el.addEventListener('bbuttondown', function(evt) {
+			while (removeLine());
+		})
+	},
+	tick: function() {
+		if (this.line) {
+			const p = this.el.object3D.localToWorld(this.pen_end.clone())
+			//const p = this.el.object3D.getWorldPosition()
+			this.path += ',' + p.x + ' ' + p.y + ' ' + p.z
+			this.line.setAttribute('meshline', { path: this.path, color: '#F00', lineWidth: 3 })
+		}
+	}
+})
+</script></head><body><a-scene>
+	<a-sky color="#999"></a-sky>
+	<a-entity oculus-touch-controls='hand: right' input-listen></a-entity>
+	<a-entity oculus-touch-controls='hand: left' input-listen></a-entity>
+</a-scene>
+</body></html>
