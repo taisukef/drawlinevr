@@ -11,6 +11,9 @@ https://taisukef.github.io/drawlinevr/redlines.html
 mirrors-VR for Oculus Quest  
 https://taisukef.github.io/drawlinevr/mirrors.html  
 
+shodo-VR for Oculus Quest  
+https://taisukef.github.io/drawlinevr/shodo.html  
+
 # blog
 HTMLとJavaScript48行で作るVRらくがきアプリ for Oculus Quest - オープンソースツールと昭和スポット  
 https://fukuno.jig.jp/2574  
