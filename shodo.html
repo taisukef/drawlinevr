@@ -1,0 +1,92 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>drawline-VR for Oculus Quest</title>
+<!-- https://aframe.io/ -->
+<script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+<script>"use strict";
+const list = [];
+
+const putSphere = (scene, p, radius) => {
+	const aline = document.createElement("a-sphere");
+	aline.setAttribute("position", p);
+	aline.setAttribute("color", "#000");
+	aline.setAttribute("roughness", 1);
+	// aline.setAttribute("metalness", 0);
+	const seg = 6;
+	aline.setAttribute("segments-width", seg);
+	aline.setAttribute("segments-height", seg);
+	aline.setAttribute("radius", radius);
+	scene.appendChild(aline);
+	return aline;
+};
+
+AFRAME.registerComponent("input-listen", {
+	init: function() {
+		this.scene = document.querySelector("a-scene");
+		//putSphere(this.scene, {x:0, y:0, z:-3}, 1);
+
+		const penlen = .15;
+		const penoff = .02;
+		const penth = 225 / 180 * Math.PI;
+		const y1 = Math.sin(penth) * penoff;
+		const z1 = Math.cos(penth) * penoff;
+		const y2 = Math.sin(penth) * (penoff + penlen);
+		const z2 = Math.cos(penth) * (penoff + penlen);
+		const pen = document.createElement("a-entity");
+		this.penend = new THREE.Vector3(0, y2, z2);
+		pen.setAttribute("line", { start: { x: 0, y: y1, z: z1 }, end: this.penend, color: "brown" });
+		this.el.appendChild(pen);
+
+		this.trig = 0;
+		this.line = [];
+		this.bkp = null;
+		this.el.addEventListener("triggerdown", (e) => {
+			// const p = handright.getAttribute("position").clone();
+			const p = this.el.object3D.localToWorld(this.penend.clone());
+			//putSphere(scene, p, 0.1);
+			this.bkp = p;
+			list.push(this.line);
+		})
+		this.el.addEventListener("triggerup", (e) => {
+			this.line = [];
+			this.bkp = null;
+		})
+		this.el.addEventListener("triggerchanged", (e) => {
+			this.trig = e.detail.value;
+		})
+		const removeLine = () => {
+			const line = list.pop();
+			if (line) {
+				for (let i = 0; i < line.length; i++) {
+					this.scene.removeChild(line[i]);
+				}
+			}
+			return line;
+		}
+		this.el.addEventListener("gripdown", function(evt) {
+			removeLine();
+			this.line = [];
+			this.bkp = null;
+		})
+		this.el.addEventListener("bbuttondown", function(evt) {
+			while (removeLine());
+		})
+	},
+	tick: function() {
+		if (this.bkp) {
+			// const p = handright.getAttribute("position").clone();
+			const p = this.el.object3D.localToWorld(this.penend.clone());
+			const p2 = this.bkp;
+			const thr = 0.7;
+			const lineWidth = this.trig < thr ? 0.01 : (this.trig - thr) / (1 - thr);
+			const aline = putSphere(this.scene, p, lineWidth * .01);
+			this.line.push(aline);
+			this.bkp = p;
+		}
+	}
+})
+</script></head><body>
+<a-scene background="color: #f8f8f8">
+	<a-entity id="handright" oculus-touch-controls="hand: right" input-listen></a-entity>
+	<a-entity id="handleft" oculus-touch-controls="hand: left" input-listen></a-entity>
+</a-scene>
+</body></html>
