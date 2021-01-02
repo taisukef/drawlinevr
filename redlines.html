@@ -4,19 +4,10 @@
 <script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
 <script src="https://rawgit.com/andreasplesch/aframe-meshline-component/master/dist/aframe-meshline-component.min.js"></script>
 <script>"use strict";
-const list = []
-AFRAME.registerComponent('input-listen', {
+const list = [];
+AFRAME.registerComponent("input-listen", {
 	init: function() {
 		const scene = document.querySelector('a-scene')
-		
-	/*	
-		const train = document.createElement('a-sphere')
-		train.setAttribute('position', '0 0 -5')
-		train.setAttribute('radius', '.3')
-		train.setAttribute('color', "blue")
-		//scene.appendChild(train)
-		this.el.appendChild(train)
-*/
 		const penlen = .07
 		const penoff = .04
 		const penth = 225 / 180 * Math.PI
@@ -33,18 +24,17 @@ AFRAME.registerComponent('input-listen', {
 		this.path = null
 		const self = this
 
-		this.el.addEventListener('triggerdown', function(evt) {
+		this.el.addEventListener('triggerdown', function(e) {
 			if (!self.line) {
 				self.line = document.createElement('a-entity')
 				scene.appendChild(self.line)
 				list.push(self.line)
 
 				const p = this.object3D.localToWorld(self.pen_end.clone())
-				//const p = this.object3D.getWorldPosition()
 				self.path = p.x + " " + p.y + " " + p.z
 			}
 		})
-		this.el.addEventListener('triggerup', function(evt) {
+		this.el.addEventListener('triggerup', function(e) {
 			self.line = null
 		})
 		const removeLine = function() {
@@ -53,25 +43,24 @@ AFRAME.registerComponent('input-listen', {
 				scene.removeChild(line)
 			return line
 		}
-		this.el.addEventListener('gripdown', function(evt) {
+		this.el.addEventListener('gripdown', function(e) {
 			removeLine()
 			self.line = null
 		})
-		this.el.addEventListener('bbuttondown', function(evt) {
+		this.el.addEventListener('bbuttondown', function(e) {
 			while (removeLine());
 		})
 	},
 	tick: function() {
 		if (this.line) {
 			const p = this.el.object3D.localToWorld(this.pen_end.clone())
-			//const p = this.el.object3D.getWorldPosition()
 			this.path += ',' + p.x + ' ' + p.y + ' ' + p.z
 			this.line.setAttribute('meshline', { path: this.path, color: '#F00', lineWidth: 3 })
 		}
 	}
 })
-</script></head><body><a-scene>
-	<a-sky color="#999"></a-sky>
+</script></head><body>
+<a-scene background="color: #999">
 	<a-entity oculus-touch-controls='hand: right' input-listen></a-entity>
 	<a-entity oculus-touch-controls='hand: left' input-listen></a-entity>
 </a-scene>
