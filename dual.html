@@ -1,43 +1,44 @@
 <!DOCTYPE html><html><head><meta charset="utf-8"/>
 <title>dual-drawline-VR for Oculus Quest</title>
-<script src="https://aframe.io/releases/1.0.3/aframe.min.js"></script>
-<script>'use strict'
-const list = []
-AFRAME.registerComponent('input-listen', {
+<script src="https://aframe.io/releases/1.1.0/aframe.min.js"></script>
+<script>"use strict";
+const list = [];
+AFRAME.registerComponent("input-listen", {
 	init: function() {
-		this.line = null
-		this.bkp = null
-		const scene = document.querySelector('a-scene')
-		const self = this
-		this.el.addEventListener('triggerdown', function(evt) {
-			if (!self.line) {
-				self.line = document.createElement('a-entity')
-				scene.appendChild(self.line)
-				list.push(self.line)
-				self.bkp = this.object3D.getWorldPosition()
+		this.line = null;
+		this.bkp = null;
+		const scene = document.querySelector('a-scene');
+		const el = this.el;
+		el.addEventListener('triggerdown', (e) => {
+			if (!this.line) {
+				this.line = document.createElement('a-entity');
+				scene.appendChild(this.line);
+				list.push(this.line);
+				this.bkp = el.object3D.getWorldPosition();
 			}
 		})
-		this.el.addEventListener('triggerup', function(evt) {
-			self.line = null
+		el.addEventListener('triggerup', (e) => {
+			this.line = null;
 		})
-		const removeLine = function() {
-			const line = list.pop()
-			if (line)
-				scene.removeChild(line)
-			return line
+		const removeLine = () => {
+			const line = list.pop();
+			if (line) {
+				scene.removeChild(line);
+			}
+			return line;
 		}
-		this.el.addEventListener('gripdown', function(evt) {
-			removeLine()
-			self.line = null
+		el.addEventListener('gripdown', (e) => {
+			removeLine();
+			this.line = null;
 		})
-		this.el.addEventListener('bbuttondown', function(evt) {
+		el.addEventListener('bbuttondown', (e) => {
 			while (removeLine());
 		})
 	},
 	tick: function() {
 		if (this.line) {
-			const p = this.el.object3D.getWorldPosition()
-			this.line.setAttribute('line', { start: this.bkp, end: p, color: "#F00" })
+			const p = this.el.object3D.getWorldPosition();
+			this.line.setAttribute('line', { start: this.bkp, end: p, color: "#F00" });
 		}
 	}
 })
